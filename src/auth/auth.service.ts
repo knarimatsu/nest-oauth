@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Prisma, User } from '@prisma/client';
 import { PrismaService } from 'src/prisma.service';
 import { UsersService } from 'src/users/users.service';
-import bcrypt from 'bcrypt';
+import * as bcrypt from 'bcrypt';
 
 export interface SignInResponse {
   access_token: string;
@@ -25,12 +25,13 @@ export class AuthService {
    * signIn
    */
   async signIn(username: string, pass: string): Promise<SignInResponse> {
-    const user = await this.userService.findOne(username);
-    const result: boolean = await bcrypt.compare(pass, user.password);
+    const user = await this.prisma.user.findFirst({ where: { username } });
+    const result: boolean = bcrypt.compareSync(pass, user.password);
     if (!result) {
       throw new UnauthorizedException();
     }
-    const payload = { sub: user.userId, username: user.username };
+    const payload = { sub: user.id, username: user.username };
+
     return {
       access_token: await this.jwtService.signAsync(payload),
     };
@@ -41,9 +42,14 @@ export class AuthService {
       username,
       password: bcrypt.hashSync(password, 10),
     };
-    return await this.prisma.user.create({
-      data: params,
-    });
+    try {
+      return await this.prisma.user.create({
+        data: params,
+      });
+    } catch (error) {
+      console.log(error);
+      throw new Error(error);
+    }
   }
 
   async updateUser(

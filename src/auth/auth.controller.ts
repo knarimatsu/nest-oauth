@@ -23,8 +23,15 @@ export class AuthController {
 
   @HttpCode(HttpStatus.OK)
   @Post('signup')
-  singUp(@Body() singUpDto: Record<string, any>) {
-    return this.authService.createUser(singUpDto.username, singUpDto.password);
+  async singUp(@Body() singUpDto: Record<string, any>) {
+    try {
+      await this.authService.createUser(singUpDto.username, singUpDto.password);
+      return {
+        message: 'New User has created',
+      };
+    } catch (error) {
+      throw new Error(error);
+    }
   }
 
   @UseGuards(AuthGuard)
