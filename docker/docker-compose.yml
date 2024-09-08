@@ -1,0 +1,11 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: 'nest-outh_mysql'
+    environment:
+      MYSQL_ROOT_PASSWORD: 'root'
+    ports:
+      - '5001:3306'
+    restart: always
+    volumes:
+      - ./mysql-data:/var/lib/mysql
